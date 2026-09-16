@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>LinkedIn Media Downloader</title>
+<title>Social Media Downloader</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   :root {
@@ -142,11 +142,11 @@
 </head>
 <body>
   <div class="card">
-    <h1>LinkedIn Media Downloader</h1>
-    <p class="subtitle">Incolla il link di un post LinkedIn pubblico per estrarre immagini e video.</p>
+    <h1>Social Media Downloader</h1>
+    <p class="subtitle">Incolla un link pubblico di LinkedIn, Instagram o TikTok per estrarre immagini e video.</p>
 
     <div class="input-row">
-      <input type="text" id="postUrl" placeholder="https://www.linkedin.com/posts/..." />
+      <input type="text" id="postUrl" placeholder="https://www.instagram.com/reel/..." />
       <button id="extractBtn">Estrai</button>
     </div>
 
@@ -154,10 +154,9 @@
     <div id="results" class="results"></div>
 
     <div class="disclaimer">
-      Funziona in modo affidabile solo su post pubblici (senza login). LinkedIn può cambiare la
-      struttura delle pagine in qualsiasi momento, quindi l'estrazione — soprattutto dei video —
-      potrebbe smettere di funzionare senza preavviso. Usa questo strumento solo per contenuti che
-      hai il diritto di scaricare (i tuoi post, o materiale di cui hai il permesso dell'autore).
+      Funziona solo con contenuti pubblici (senza login). Le piattaforme possono cambiare la
+      struttura delle pagine in qualsiasi momento. Usa questo strumento solo per contenuti che
+      hai il diritto di scaricare o di cui hai il permesso dell'autore.
     </div>
   </div>
 
@@ -176,7 +175,7 @@ function renderMediaSection(title, items, kind) {
   if (!items.length) return '';
   let html = `<div class="section-title">${title}</div>`;
   items.forEach((url, i) => {
-    const filename = `linkedin-${kind}-${i + 1}.${kind === 'immagine' ? 'jpg' : 'mp4'}`;
+    const filename = `social-${kind}-${i + 1}.${kind === 'immagine' ? 'jpg' : 'mp4'}`;
     const downloadUrl = `/api/proxy-download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
     const preview = kind === 'immagine'
       ? `<img src="${url}" alt="anteprima" />`
@@ -196,7 +195,7 @@ async function extract() {
   resultsEl.innerHTML = '';
 
   if (!url) {
-    setStatus('Incolla prima un link di un post LinkedIn.', 'error');
+    setStatus('Incolla prima un link di LinkedIn, Instagram o TikTok.', 'error');
     return;
   }
 
