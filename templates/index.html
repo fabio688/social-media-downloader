@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Social Media Downloader</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --linkedin-blue: #0a66c2;
+    --bg: #f3f2ef;
+    --card-bg: #ffffff;
+    --text: #1d2226;
+    --muted: #56687a;
+    --border: #dce1e6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+  .card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06);
+    padding: 32px;
+    width: 100%;
+    max-width: 620px;
+  }
+  h1 {
+    font-size: 1.4rem;
+    margin: 0 0 4px;
+    color: var(--linkedin-blue);
+  }
+  p.subtitle {
+    margin: 0 0 24px;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+  .input-row {
+    display: flex;
+    gap: 8px;
+  }
+  input[type="text"] {
+    flex: 1;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+  }
+  input[type="text"]:focus {
+    outline: none;
+    border-color: var(--linkedin-blue);
+  }
+  button {
+    background: var(--linkedin-blue);
+    color: white;
+    border: none;
+    border-radius: 24px;
+    padding: 0 22px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  button:disabled {
+    background: #9db8cf;
+    cursor: not-allowed;
+  }
+  .status {
+    margin-top: 16px;
+    font-size: 0.9rem;
+  }
+  .status.error { color: #b3261e; }
+  .status.info { color: var(--muted); }
+  .results {
+    margin-top: 24px;
+  }
+  .section-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    margin: 20px 0 10px;
+  }
+  .media-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+  .media-item img {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+  .media-item .placeholder {
+    width: 56px;
+    height: 56px;
+    border-radius: 6px;
+    background: #eef1f4;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .media-item .label {
+    flex: 1;
+    font-size: 0.85rem;
+    color: var(--muted);
+    word-break: break-all;
+  }
+  .media-item a.download-btn {
+    text-decoration: none;
+    background: var(--linkedin-blue);
+    color: white;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .disclaimer {
+    margin-top: 28px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.4;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Social Media Downloader</h1>
+    <p class="subtitle">Incolla un link pubblico di LinkedIn, Instagram o TikTok per estrarre immagini e video.</p>
+
+    <div class="input-row">
+      <input type="text" id="postUrl" placeholder="https://www.instagram.com/reel/..." />
+      <button id="extractBtn">Estrai</button>
+    </div>
+
+    <div id="status" class="status"></div>
+    <div id="results" class="results"></div>
+
+  </div>
+
+<script>
+const extractBtn = document.getElementById('extractBtn');
+const postUrlInput = document.getElementById('postUrl');
+const statusEl = document.getElementById('status');
+const resultsEl = document.getElementById('results');
+
+function setStatus(text, type) {
+  statusEl.textContent = text || '';
+  statusEl.className = 'status' + (type ? ' ' + type : '');
+}
+
+function renderMediaSection(title, items, kind, sourceUrl) {
+  if (!items.length) return '';
+  let html = `<div class="section-title">${title}</div>`;
+  items.forEach((url, i) => {
+    const filename = `social-${kind}-${i + 1}.${kind === 'immagine' ? 'jpg' : 'mp4'}`;
+    const downloadEndpoint = kind === 'video' && sourceUrl
+      ? '/api/social-download'
+      : '/api/proxy-download';
+    const downloadValue = kind === 'video' && sourceUrl ? sourceUrl : url;
+    const downloadUrl = `${downloadEndpoint}?url=${encodeURIComponent(downloadValue)}&filename=${encodeURIComponent(filename)}`;
+    const preview = kind === 'immagine'
+      ? `<img src="${url}" alt="anteprima" />`
+      : `<div class="placeholder">VIDEO</div>`;
+    html += `
+      <div class="media-item">
+        ${preview}
+        <div class="label">${kind === 'immagine' ? 'Immagine' : 'Video'} ${i + 1}</div>
+        <a class="download-btn" href="${downloadUrl}">Scarica</a>
+      </div>`;
+  });
+  return html;
+}
+
+async function extract() {
+  const url = postUrlInput.value.trim();
+  resultsEl.innerHTML = '';
+
+  if (!url) {
+    setStatus('Incolla prima un link di LinkedIn, Instagram o TikTok.', 'error');
+    return;
+  }
+
+  extractBtn.disabled = true;
+  setStatus('Estrazione in corso...', 'info');
+
+  try {
+    const res = await fetch('/api/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    const responseText = await res.text();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      data = { error: 'Il server ha restituito una risposta non valida.' };
+    }
+
+    if (!res.ok) {
+      setStatus(data.error || 'Errore sconosciuto.', 'error');
+      return;
+    }
+
+    setStatus(data.title ? `Trovato: "${data.title}"` : 'Media trovati.', 'info');
+    resultsEl.innerHTML =
+      renderMediaSection('Immagini', data.images, 'immagine') +
+      renderMediaSection('Video', data.videos, 'video', data.download_source);
+
+  } catch (err) {
+    setStatus('Errore di rete: ' + err.message, 'error');
+  } finally {
+    extractBtn.disabled = false;
+  }
+}
+
+extractBtn.addEventListener('click', extract);
+postUrlInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') extract();
+});
+</script>
+</body>
+</html>
