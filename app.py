@@ -62,6 +62,14 @@ def get_platform(url: str) -> str | None:
         or hostname in {"vm.tiktok.com", "vt.tiktok.com"}
     ):
         return "TikTok"
+    if (
+        hostname == "youtube.com"
+        or hostname.endswith(".youtube.com")
+        or hostname == "youtube-nocookie.com"
+        or hostname.endswith(".youtube-nocookie.com")
+        or hostname == "youtu.be"
+    ):
+        return "YouTube"
     return None
 
 
@@ -300,7 +308,7 @@ def api_extract():
     platform = get_platform(url)
     if not platform:
         return jsonify({
-            "error": "Inserisci un link pubblico di LinkedIn, Instagram o TikTok."
+            "error": "Inserisci un link pubblico di LinkedIn, Instagram, TikTok o YouTube."
         }), 400
 
     try:
@@ -320,8 +328,8 @@ def api_extract():
     if not media["images"] and not media["videos"]:
         return jsonify({
             "error": (
-                "Nessun media trovato. Il post potrebbe essere privato o richiedere il login, "
-                "oppure LinkedIn potrebbe aver cambiato la struttura della pagina nel frattempo."
+                "Nessun media trovato. Il contenuto potrebbe essere privato, richiedere il login "
+                "oppure la piattaforma potrebbe aver cambiato la propria struttura."
             )
         }), 404
 
@@ -332,8 +340,8 @@ def api_extract():
 def social_download():
     source_url = request.args.get("url", "").strip()
     platform = get_platform(source_url)
-    if platform not in {"Instagram", "TikTok"}:
-        return "URL Instagram o TikTok non valida.", 400
+    if platform not in {"Instagram", "TikTok", "YouTube"}:
+        return "URL Instagram, TikTok o YouTube non valida.", 400
 
     try:
         return download_social_media(source_url, f"social-{platform.lower()}-{int(time.time())}.mp4")
