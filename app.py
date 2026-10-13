@@ -172,23 +172,25 @@ def extract_media(post_url: str) -> dict:
 
 
 def extract_social_media(post_url: str) -> dict:
-    response = requests.get(post_url, headers=HEADERS, timeout=15, allow_redirects=True)
-    response.raise_for_status()
-    soup = BeautifulSoup(response.text, "html.parser")
     result = {"title": None, "images": [], "videos": []}
 
-    title_tag = soup.find("meta", property="og:title")
-    if title_tag and title_tag.get("content"):
-        result["title"] = title_tag["content"]
-    for tag in soup.find_all("meta", property="og:image"):
-        content = tag.get("content")
-        if content:
-            result["images"].append(clean_url(content))
-    for prop in ("og:video", "og:video:secure_url", "og:video:url"):
-        for tag in soup.find_all("meta", property=prop):
+    if get_platform(post_url) != "YouTube":
+        response = requests.get(post_url, headers=HEADERS, timeout=15, allow_redirects=True)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        title_tag = soup.find("meta", property="og:title")
+        if title_tag and title_tag.get("content"):
+            result["title"] = title_tag["content"]
+        for tag in soup.find_all("meta", property="og:image"):
             content = tag.get("content")
             if content:
-                result["videos"].append(clean_url(content))
+                result["images"].append(clean_url(content))
+        for prop in ("og:video", "og:video:secure_url", "og:video:url"):
+            for tag in soup.find_all("meta", property=prop):
+                content = tag.get("content")
+                if content:
+                    result["videos"].append(clean_url(content))
 
     if result["videos"]:
         return result
