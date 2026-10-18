@@ -1,7 +1,7 @@
 # Social Media Downloader
 
 Webapp Flask per estrarre immagini e video da contenuti pubblici di LinkedIn,
-Instagram e TikTok, incollando il link del contenuto.
+Instagram, TikTok e YouTube, incollando il link del contenuto.
 
 ## Avvio rapido
 
@@ -17,8 +17,8 @@ Poi apri http://localhost:5000 nel browser.
 
 ## Come funziona
 
-1. Incolli il link del contenuto pubblico di LinkedIn, Instagram o TikTok.
-2. Il server scarica l'HTML della pagina e cerca:
+1. Incolli il link del contenuto pubblico di LinkedIn, Instagram, TikTok o YouTube.
+2. Per YouTube, confermi di avere i diritti e il server scarica il video con `yt-dlp`. Per gli altri social, il server scarica l'HTML e cerca:
    - i tag `<meta property="og:image">` per le immagini (di solito presenti anche
      senza login, perché servono alle anteprime social);
    - i tag `<meta property="og:video">` e le sorgenti video LinkedIn;
