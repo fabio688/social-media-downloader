@@ -38,8 +38,8 @@ Poi apri http://localhost:5000 nel browser.
   funziona su alcuni post ma non su tutti. Per un'estrazione video più affidabile
   servirebbe un browser headless (es. Playwright) che esegua il JavaScript della
   pagina — è un passo successivo possibile, ma più pesante da installare e gestire.
-- **FFmpeg**: Render lo installa durante il deploy; per l'avvio locale, installa FFmpeg
-  e rendilo disponibile nel `PATH` per unire le tracce audio e video di YouTube.
+- **FFmpeg**: Render lo include nel runtime Python nativo. Per l'avvio locale, installa
+  FFmpeg e rendilo disponibile nel `PATH` per unire le tracce audio e video di YouTube.
 - **Le piattaforme cambiano spesso la struttura delle pagine**: è normale che, nel tempo,
   questo script smetta di funzionare e vada aggiornato.
 - **Termini di servizio**: LinkedIn vieta lo scraping automatizzato nei suoi Termini
