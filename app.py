@@ -342,8 +342,8 @@ def api_extract():
 def social_download():
     source_url = request.args.get("url", "").strip()
     platform = get_platform(source_url)
-    if platform not in {"Instagram", "TikTok", "YouTube"}:
-        return "URL Instagram, TikTok o YouTube non valida.", 400
+    if platform not in {"Instagram", "TikTok", "YouTube"} or (platform == "YouTube" and request.args.get("rights_confirmed") != "1"):
+        return "URL social non valida o conferma i diritti per scaricare il video.", 400
 
     try:
         return download_social_media(source_url, f"social-{platform.lower()}-{int(time.time())}.mp4")
