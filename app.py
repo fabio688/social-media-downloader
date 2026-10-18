@@ -260,6 +260,9 @@ def download_social_media(post_url: str, filename: str):
         "retries": 2,
         "extractor_retries": 2,
     }
+    if get_platform(post_url) == "YouTube":
+        options["extractor_args"] = {"youtube": {"player_client": ["android"]}}
+
     try:
         import curl_cffi  # noqa: F401
         from yt_dlp.networking.impersonate import ImpersonateTarget
