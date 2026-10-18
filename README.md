@@ -19,8 +19,8 @@ Poi apri http://localhost:5000 nel browser.
 
 1. Incolli il link del contenuto pubblico di LinkedIn, Instagram, TikTok o YouTube.
 2. Per YouTube, confermi di avere il diritto di scaricare il video; `yt-dlp`
-   scarica le tracce audio e video separate e FFmpeg le unisce in MP4. Per gli
-   altri social, il server scarica l'HTML e cerca:
+   usa il client pubblico Android e scarica un MP4 compatibile. Per le altre
+   piattaforme, il server cerca prima i media nella pagina:
    - i tag `<meta property="og:image">` per le immagini (di solito presenti anche
      senza login, perché servono alle anteprime social);
    - i tag `<meta property="og:video">` e le sorgenti video LinkedIn;
@@ -39,7 +39,8 @@ Poi apri http://localhost:5000 nel browser.
   servirebbe un browser headless (es. Playwright) che esegua il JavaScript della
   pagina — è un passo successivo possibile, ma più pesante da installare e gestire.
 - **FFmpeg**: Render lo include nel runtime Python nativo. Per l'avvio locale, installa
-  FFmpeg e rendilo disponibile nel `PATH` per unire le tracce audio e video di YouTube.
+  FFmpeg e rendilo disponibile nel `PATH` se il formato selezionato richiede l'unione
+  di tracce audio e video.
 - **Le piattaforme cambiano spesso la struttura delle pagine**: è normale che, nel tempo,
   questo script smetta di funzionare e vada aggiornato.
 - **Termini di servizio**: LinkedIn vieta lo scraping automatizzato nei suoi Termini
