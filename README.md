@@ -17,10 +17,10 @@ Poi apri http://localhost:5000 nel browser.
 
 ## Come funziona
 
-1. Incolli il link del contenuto pubblico di LinkedIn, Instagram, TikTok o YouTube.
-2. Per YouTube, confermi di avere il diritto di scaricare il video; `yt-dlp`
-   usa il client pubblico Android e scarica un MP4 compatibile. Per le altre
-   piattaforme, il server cerca prima i media nella pagina:
+1. Incolli un link pubblico di LinkedIn, Instagram o TikTok per cercare i media. Se
+   incolli un link YouTube o usi la sezione dedicata, il sito ti porta a TurboScribe,
+   un servizio esterno ad Antea.
+2. Per LinkedIn, Instagram e TikTok, il server cerca prima i media nella pagina:
    - i tag `<meta property="og:image">` per le immagini (di solito presenti anche
      senza login, perché servono alle anteprime social);
    - i tag `<meta property="og:video">` e le sorgenti video LinkedIn;
