@@ -416,6 +416,11 @@ def api_extract():
                 "oppure la piattaforma ha limitato la richiesta."
             )
         }), 502
+    except Exception:
+        app.logger.exception("Errore inatteso nell'analisi di %s", url)
+        if platform == "YouTube":
+            return jsonify({"error": YOUTUBE_BLOCK_MESSAGE}), 502
+        return jsonify({"error": "Errore inatteso durante l'analisi. Riprova più tardi."}), 500
 
     if platform == "YouTube" and not media["videos"]:
         return jsonify({"error": YOUTUBE_BLOCK_MESSAGE}), 502

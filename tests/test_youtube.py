@@ -137,3 +137,10 @@ def test_deploy_config_has_threads_and_timeout():
         text = open(os.path.join(root, name)).read()
         assert "--timeout 300" in text and "gthread" in text
     assert "turboscribe" not in open(os.path.join(root, "README.md")).read().lower()
+
+
+def test_extract_unexpected_error_is_json(client, fake_ydl):
+    fake_ydl.error = RuntimeError("boom")
+    response = client.post("/api/extract", json={"url": YT})
+    assert response.status_code == 502
+    assert response.get_json()["error"] == app_module.YOUTUBE_BLOCK_MESSAGE
