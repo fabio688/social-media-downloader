@@ -209,7 +209,8 @@ def extract_social_media(post_url: str) -> dict:
             "best[ext=mp4][vcodec^=avc1][acodec^=mp4a]/"
             "best[vcodec^=avc1][acodec^=mp4a]/best[ext=mp4]/bestvideo*/best"
         ),
-        "ignore_no_formats_error": True,
+        # Per YouTube serve l'errore vero (es. blocco "not a bot") per log e messaggio.
+        "ignore_no_formats_error": get_platform(post_url) != "YouTube",
     }
     try:
         import curl_cffi  # noqa: F401
@@ -423,6 +424,7 @@ def api_extract():
         return jsonify({"error": "Errore inatteso durante l'analisi. Riprova più tardi."}), 500
 
     if platform == "YouTube" and not media["videos"]:
+        app.logger.error("Analisi YouTube senza formati video per %s", url)
         return jsonify({"error": YOUTUBE_BLOCK_MESSAGE}), 502
 
     if not media["images"] and not media["videos"]:
