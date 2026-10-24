@@ -17,19 +17,25 @@ Poi apri http://localhost:5000 nel browser.
 
 ## Come funziona
 
-1. Incolli un link pubblico di LinkedIn, Instagram o TikTok per cercare i media. Se
-   incolli un link YouTube o usi la sezione dedicata, il sito ti porta a TurboScribe,
-   un servizio esterno ad Antea.
+1. Incolli un link pubblico di LinkedIn, Instagram, TikTok o YouTube per cercare i media.
 2. Per LinkedIn, Instagram e TikTok, il server cerca prima i media nella pagina:
    - i tag `<meta property="og:image">` per le immagini (di solito presenti anche
      senza login, perché servono alle anteprime social);
    - i tag `<meta property="og:video">` e le sorgenti video LinkedIn;
    - `yt-dlp` per ricavare le sorgenti video pubbliche da Instagram e TikTok.
+   Per YouTube il server usa direttamente `yt-dlp` e FFmpeg (nessun servizio esterno,
+   nessun account Google richiesto all'utente). Prima del download l'utente deve spuntare
+   la conferma di avere il diritto di scaricare il video; l'endpoint
+   `/api/social-download` rifiuta le richieste YouTube senza `rights_confirmed=1`.
 3. Il download avviene tramite il server (non direttamente dal browser), per evitare
    blocchi CORS e per poter assegnare un nome file corretto.
 
 ## Limiti da conoscere (importanti)
 
+- **YouTube**: vengono scaricati solo i video pubblici a cui il server riesce ad accedere.
+  YouTube blocca spesso gli IP dei datacenter (come quelli di Render): in quel caso l'app
+  mostra un errore chiaro. Non c'è alcuna garanzia che ogni video sia scaricabile. Il
+  download richiede tempo, per questo gunicorn gira con `--timeout 300`.
 - **Contenuti privati o che richiedono login**: se il contenuto non è visibile senza essere
   autenticati, questo strumento non troverà nulla di utile. Non implementa (e non
   dovrebbe implementare) l'uso di credenziali per bypassare il login.

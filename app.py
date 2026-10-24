@@ -227,7 +227,7 @@ def extract_social_media(post_url: str) -> dict:
 
     result["title"] = result["title"] or info.get("title")
     thumbnail = info.get("thumbnail")
-    if thumbnail and thumbnail not in result["images"]:
+    if thumbnail and thumbnail not in result["images"] and get_platform(post_url) != "YouTube":
         result["images"].append(thumbnail)
 
     formats = info.get("formats") or []
@@ -261,6 +261,39 @@ def apply_youtube_options(options: dict, url: str, temp_dir: str):
     if cookies_path:
         options["cookiefile"] = cookies_path
     options["extractor_args"] = {"youtube": {"player_client": ["tv", "web_safari", "mweb", "default"]}}
+
+
+YOUTUBE_MAX_FILESIZE = 500 * 1024 * 1024
+YOUTUBE_MAX_DURATION = 60 * 60
+
+
+def youtube_match_filter(info, *, incomplete=False):
+    """Esclude dirette e video troppo lunghi (disco/RAM limitati su Render)."""
+    if info.get("is_live"):
+        raise DownloadError("video is live")
+    if (info.get("duration") or 0) > YOUTUBE_MAX_DURATION:
+        raise DownloadError("video is too long")
+    return None
+
+
+YOUTUBE_BLOCK_MESSAGE = (
+    "YouTube ha bloccato la richiesta dal server (succede spesso con i server cloud) "
+    "o il video non è pubblico. Riprova più tardi: non tutti i video YouTube sono scaricabili."
+)
+
+
+def youtube_error_message(error: Exception) -> str:
+    """Traduce i fallimenti di yt-dlp su YouTube in un messaggio chiaro, senza promettere nulla."""
+    text = str(error).lower()
+    if "confirm your age" in text or "age-restricted" in text or "inappropriate for some" in text:
+        return "Questo video richiede l'accesso per verificare l'età: non è scaricabile."
+    if "private video" in text or "members-only" in text or "members only" in text:
+        return "Il video è privato o riservato ai membri: si possono scaricare solo video pubblici."
+    if "is live" in text or "live event" in text or "livestream" in text:
+        return "Le dirette YouTube non sono scaricabili."
+    if "larger than max-filesize" in text or "max-filesize" in text or "too long" in text:
+        return "Il video è troppo grande o troppo lungo per essere scaricato da questo servizio."
+    return YOUTUBE_BLOCK_MESSAGE
 
 
 def find_ffmpeg():
@@ -314,6 +347,9 @@ def download_social_media(post_url: str, filename: str):
     if ffmpeg_path:
         options["ffmpeg_location"] = ffmpeg_path
     apply_youtube_options(options, post_url, temp_dir)
+    if get_platform(post_url) == "YouTube":
+        options["max_filesize"] = YOUTUBE_MAX_FILESIZE
+        options["match_filter"] = youtube_match_filter
 
     try:
         import curl_cffi  # noqa: F401
@@ -335,21 +371,17 @@ def download_social_media(post_url: str, filename: str):
             raise DownloadError("Il downloader non ha prodotto alcun file.")
         media_path = files[0]
     except Exception:
-        for entry in os.listdir(temp_dir):
-            os.remove(os.path.join(temp_dir, entry))
-        os.rmdir(temp_dir)
+        shutil.rmtree(temp_dir, ignore_errors=True)
         raise
 
     @after_this_request
     def remove_temporary_file(response):
-        try:
-            os.remove(media_path)
-            os.rmdir(temp_dir)
-        except OSError:
-            pass
+        shutil.rmtree(temp_dir, ignore_errors=True)
         return response
 
-    return send_file(media_path, as_attachment=True, download_name=filename, mimetype="video/mp4")
+    response = send_file(media_path, as_attachment=True, download_name=filename, mimetype="video/mp4")
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 @app.route("/", methods=["GET"])
@@ -376,12 +408,17 @@ def api_extract():
         return jsonify({"error": "La piattaforma non ha risposto. Riprova tra poco."}), 502
     except DownloadError as error:
         app.logger.error("Analisi fallita per %s: %s", url, error)
+        if platform == "YouTube":
+            return jsonify({"error": youtube_error_message(error)}), 502
         return jsonify({
             "error": (
                 "Questo contenuto non è accessibile pubblicamente senza login "
                 "oppure la piattaforma ha limitato la richiesta."
             )
         }), 502
+
+    if platform == "YouTube" and not media["videos"]:
+        return jsonify({"error": YOUTUBE_BLOCK_MESSAGE}), 502
 
     if not media["images"] and not media["videos"]:
         return jsonify({
@@ -407,7 +444,12 @@ def social_download():
         return download_social_media(source_url, f"social-{platform.lower()}-{int(time.time())}.mp4")
     except DownloadError as error:
         app.logger.error("Download fallito per %s: %s", source_url, error)
+        if platform == "YouTube":
+            return youtube_error_message(error), 502
         return "Il video non è disponibile pubblicamente o la piattaforma ha bloccato la richiesta.", 502
+    except Exception:
+        app.logger.exception("Errore inatteso nel download di %s", source_url)
+        return "Errore inatteso durante il download. Riprova più tardi.", 500
 
 
 @app.route("/api/proxy-download")
@@ -415,7 +457,7 @@ def proxy_download():
     """Scarica il file media lato server e lo inoltra al browser, evitando problemi di CORS
     e permettendo di impostare un nome file corretto."""
     media_url = request.args.get("url")
-    filename = request.args.get("filename") or f"linkedin-media-{int(time.time())}"
+    filename = re.sub(r'[^A-Za-z0-9._-]', "_", request.args.get("filename") or "") or f"linkedin-media-{int(time.time())}"
 
     if not media_url:
         return "Parametro 'url' mancante.", 400

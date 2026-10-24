@@ -3,5 +3,5 @@ services:
     name: linkedin-downloader
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+    startCommand: gunicorn --worker-class gthread --threads 4 --timeout 300 --bind 0.0.0.0:$PORT app:app
     plan: free
